@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "package_id": "PKG-007",
+  "slug": "avatar-agents",
+  "name": "sovereign-avatar-agents",
+  "domain": "AI Persona Microservices",
+  "version": "1.0.0",
+  "status": "PRODUCTION_READY",
+  "entrypoint": "src/core.py",
+  "cli_command": "sovereign-avatar-agents",
+  "microservice_port": 8785,
+  "n8n_webhook_path": "avatar-agents-trigger",
+  "n8n_workflow": "n8n/workflow.json",
+  "test_suite": "tests/test_solution.py",
+  "author": "Russell Alan Powers",
+  "license": "MIT"
+}
