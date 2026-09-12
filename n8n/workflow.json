@@ -1,47 +1,161 @@
 {
-  "name": "SBB - Sovereign Avatar Agents Automation",
+  "name": "SBB Solution 02: Sovereign AI Avatar Agents & SRE Autonomous Healer",
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "avatar-agents-trigger",
-        "responseMode": "lastNode",
-        "options": {}
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
       },
-      "id": "webhook-trigger",
-      "name": "Webhook Inbound Trigger",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        240,
-        300
-      ]
+      "id": "avatar-schedule-trigger",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 260]
     },
     {
       "parameters": {
-        "url": "http://localhost:8785/api/v1/execute",
-        "method": "POST",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ \"action\": \"n8n_pipeline_exec\", \"payload\": $json }) }}",
+        "httpMethod": "POST",
+        "path": "avatar-agents",
+        "responseMode": "lastNode",
         "options": {}
       },
-      "id": "sovereign-node",
-      "name": "Execute Sovereign Avatar Agents",
+      "id": "avatar-webhook-trigger",
+      "name": "Avatar Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 460],
+      "webhookId": "avatar-agents-hook"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://127.0.0.1:8785/api/v1/edge-vitals",
+        "options": {}
+      },
+      "id": "avatar-poll-edge",
+      "name": "Poll Live Edge Vitals",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [
-        480,
-        300
-      ]
+      "position": [480, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst body = item.body || item;\n\nlet endpoint = 'http://127.0.0.1:8785/api/v1/diagnose-incident';\nlet payload = body;\n\nif (body.message || body.prompt || body.chat) {\n  endpoint = 'http://127.0.0.1:8785/api/v1/chat';\n  payload = {\n    persona: body.persona || 'SentinelSRE',\n    message: body.message || body.prompt || body.chat,\n    session_id: body.session_id || 'n8n_interactive_session'\n  };\n} else if (body.edge_query || body.inspect_edge) {\n  endpoint = 'http://127.0.0.1:8785/api/v1/edge-vitals';\n  payload = {};\n} else {\n  endpoint = 'http://127.0.0.1:8785/api/v1/diagnose-incident';\n  payload = body.payload || body;\n}\n\nreturn [{\n  json: {\n    target_endpoint: endpoint,\n    forward_payload: payload,\n    is_chat: endpoint.endsWith('/chat'),\n    is_edge_poll: endpoint.endsWith('/edge-vitals')\n  }\n}];"
+      },
+      "id": "avatar-route-request",
+      "name": "Route Request Type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.target_endpoint }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.forward_payload) }}",
+        "options": {}
+      },
+      "id": "avatar-execute-ai",
+      "name": "Execute Avatar AI Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [720, 460]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst res = item.body || item;\nlet audit_event = null;\n\nif (res.diagnosis) {\n  const d = res.diagnosis;\n  audit_event = {\n    event_type: d.severity === 'OPTIMAL' ? 'ai_sre_telemetry_verified' : 'ai_sre_remediation_directive',\n    source: 'sol-002-avatar-agents',\n    payload: {\n      incident_id: d.incident_id,\n      target_node: d.target_node,\n      severity: d.severity,\n      persona_responder: d.persona_responder,\n      root_cause: d.root_cause,\n      remediation_directives: d.remediation_directives,\n      sre_playbook_ref: d.sre_playbook_ref\n    }\n  };\n} else if (res.ai_diagnosis) {\n  const d = res.ai_diagnosis;\n  audit_event = {\n    event_type: d.severity === 'OPTIMAL' ? 'ai_sre_edge_vitals_verified' : 'ai_sre_edge_anomaly_detected',\n    source: 'sol-002-avatar-agents',\n    payload: {\n      incident_id: d.incident_id,\n      target_node: d.target_node,\n      severity: d.severity,\n      persona_responder: d.persona_responder,\n      root_cause: d.root_cause,\n      remediation_directives: d.remediation_directives\n    }\n  };\n} else if (res.turn) {\n  audit_event = {\n    event_type: 'ai_persona_dialogue',\n    source: 'sol-002-avatar-agents',\n    payload: {\n      persona: res.turn.persona,\n      role: res.turn.role,\n      turn_count: res.turn.turn_count,\n      session_id: res.turn.session_id\n    }\n  };\n} else {\n  audit_event = {\n    event_type: 'ai_avatar_execution',\n    source: 'sol-002-avatar-agents',\n    payload: res\n  };\n}\n\nreturn [{\n  json: {\n    status: 'SUCCESS',\n    result: res,\n    audit_event: audit_event\n  }\n}];"
+      },
+      "id": "avatar-format-audit",
+      "name": "Format Audit Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [940, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8766/api/webhook/audit",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.audit_event) }}",
+        "options": {}
+      },
+      "id": "avatar-publish-vault",
+      "name": "Publish Remediation to Vault",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1160, 360]
     }
   ],
   "connections": {
-    "Webhook Inbound Trigger": {
+    "Every 15 Minutes": {
       "main": [
         [
           {
-            "node": "Execute Sovereign Avatar Agents",
+            "node": "Poll Live Edge Vitals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Live Edge Vitals": {
+      "main": [
+        [
+          {
+            "node": "Format Audit Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avatar Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route Request Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Request Type": {
+      "main": [
+        [
+          {
+            "node": "Execute Avatar AI Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Avatar AI Engine": {
+      "main": [
+        [
+          {
+            "node": "Format Audit Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Audit Record": {
+      "main": [
+        [
+          {
+            "node": "Publish Remediation to Vault",
             "type": "main",
             "index": 0
           }
@@ -49,7 +163,7 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   }
