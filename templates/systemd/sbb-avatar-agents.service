@@ -1,0 +1,21 @@
+[Unit]
+Description=Sovereign Biz Box: AI Avatar Agents & SRE Autonomous Healer
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/opt/sovereign-biz-box/solutions/avatar-agents
+EnvironmentFile=/etc/default/sbb-avatar-agents
+ExecStart=/usr/bin/python3 /opt/sovereign-biz-box/solutions/avatar-agents/n8n/webhook_adapter.py
+Restart=always
+RestartSec=5s
+
+ProtectSystem=full
+ProtectHome=read-only
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,64 @@
+{
+  "name": "TEMPLATE: SBB Solution 02 - Sovereign Avatar Agents",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# Template: SBB Solution 02 Avatar Agents\nImport this template into any n8n instance.\nConfigure variables in `Settings > Variables`:\n- `SBB_AVATAR_SERVICE_URL`\n- `SBB_VAULT_BRIDGE_URL`\n- `SBB_DEFAULT_AI_PERSONA`",
+        "height": 180,
+        "width": 500,
+        "color": 4
+      },
+      "id": "template-avatar-header-note",
+      "name": "Template Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 60]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "avatar-agents",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "template-avatar-webhook",
+      "name": "Avatar Inbound Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "template-avatar-agents-hook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($vars && $vars.SBB_AVATAR_SERVICE_URL ? $vars.SBB_AVATAR_SERVICE_URL : 'http://127.0.0.1:8785') + '/api/v1/execute' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "template-avatar-exec",
+      "name": "Execute Avatar AI Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [560, 300]
+    }
+  ],
+  "connections": {
+    "Avatar Inbound Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute Avatar AI Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

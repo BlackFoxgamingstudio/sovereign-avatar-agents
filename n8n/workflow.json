@@ -3,6 +3,45 @@
   "nodes": [
     {
       "parameters": {
+        "content": "## SBB Solution 02: Sovereign AI Avatar Agents & SRE Autonomous Healer\n**Package ID**: `PKG-007` | **Domain**: Autonomous AI Persona Microservices\n\n### Core Persona Matrices:\n- **SentinelSRE**: Edge hardware vitals, thermal mitigation, and Linux sysfs directives.\n- **ChefPro**: Commercial recipe scaling, food cost margins, and HACCP compliance.\n- **NovaPro**: Distributed systems architecture, REST contracts, and idempotency.\n- **FacilitySentinel**: Industrial HVAC, sensor telemetry, and microgrid power.\n\n### Pipeline:\nInbound Webhook / Schedule -> Route Request -> Execute Avatar AI -> Format Audit -> Publish to Vault",
+        "height": 200,
+        "width": 640,
+        "color": 4
+      },
+      "id": "sticky-avatar-overview",
+      "name": "Avatar Overview Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 20]
+    },
+    {
+      "parameters": {
+        "content": "## Platform Variables Matrix ($vars)\nConfigured in n8n Variables dashboard:\n- `$vars.SBB_AVATAR_SERVICE_URL`: `http://127.0.0.1:8785`\n- `$vars.SBB_VAULT_BRIDGE_URL`: `http://127.0.0.1:8766`\n- `$vars.SBB_DEFAULT_AI_PERSONA`: `SentinelSRE`\n- `$vars.SBB_AUTONOMOUS_HEALING_ENABLED`: `true`\n\n*All endpoints dynamically adapt to Docker, Kubernetes, or edge host targets.*",
+        "height": 200,
+        "width": 560,
+        "color": 5
+      },
+      "id": "sticky-avatar-vars",
+      "name": "Avatar Variables Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [880, 20]
+    },
+    {
+      "parameters": {
+        "content": "## SRE Remediation & Audit Immutability\n**Destination**: SBB Vault Bridge (`/api/webhook/audit`) -> `facility_telemetry_v2.db`\n\nWhen a telemetry alert arrives from Solution 01, `SentinelSRE` generates deterministic kernel mitigation commands (`powersave`, PWM fan, cache flush) and logs an immutable audit event.",
+        "height": 180,
+        "width": 560,
+        "color": 7
+      },
+      "id": "sticky-avatar-remediation",
+      "name": "Remediation Audit Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [880, 560]
+    },
+    {
+      "parameters": {
         "rule": {
           "interval": [
             {
@@ -35,7 +74,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "http://127.0.0.1:8785/api/v1/edge-vitals",
+        "url": "={{ ($vars && $vars.SBB_AVATAR_SERVICE_URL ? $vars.SBB_AVATAR_SERVICE_URL : 'http://127.0.0.1:8785') + '/api/v1/edge-vitals' }}",
         "options": {}
       },
       "id": "avatar-poll-edge",
@@ -46,7 +85,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst body = item.body || item;\n\nlet endpoint = 'http://127.0.0.1:8785/api/v1/diagnose-incident';\nlet payload = body;\n\nif (body.message || body.prompt || body.chat) {\n  endpoint = 'http://127.0.0.1:8785/api/v1/chat';\n  payload = {\n    persona: body.persona || 'SentinelSRE',\n    message: body.message || body.prompt || body.chat,\n    session_id: body.session_id || 'n8n_interactive_session'\n  };\n} else if (body.edge_query || body.inspect_edge) {\n  endpoint = 'http://127.0.0.1:8785/api/v1/edge-vitals';\n  payload = {};\n} else {\n  endpoint = 'http://127.0.0.1:8785/api/v1/diagnose-incident';\n  payload = body.payload || body;\n}\n\nreturn [{\n  json: {\n    target_endpoint: endpoint,\n    forward_payload: payload,\n    is_chat: endpoint.endsWith('/chat'),\n    is_edge_poll: endpoint.endsWith('/edge-vitals')\n  }\n}];"
+        "jsCode": "const item = $input.first().json;\nconst body = item.body || item;\nconst avatarBase = (typeof $vars !== 'undefined' && $vars.SBB_AVATAR_SERVICE_URL) ? $vars.SBB_AVATAR_SERVICE_URL : 'http://127.0.0.1:8785';\nconst defaultPersona = (typeof $vars !== 'undefined' && $vars.SBB_DEFAULT_AI_PERSONA) ? $vars.SBB_DEFAULT_AI_PERSONA : 'SentinelSRE';\n\nlet endpoint = `${avatarBase}/api/v1/diagnose-incident`;\nlet payload = body;\n\nif (body.message || body.prompt || body.chat) {\n  endpoint = `${avatarBase}/api/v1/chat`;\n  payload = {\n    persona: body.persona || defaultPersona,\n    message: body.message || body.prompt || body.chat,\n    session_id: body.session_id || 'n8n_interactive_session'\n  };\n} else if (body.edge_query || body.inspect_edge) {\n  endpoint = `${avatarBase}/api/v1/edge-vitals`;\n  payload = {};\n} else {\n  endpoint = `${avatarBase}/api/v1/diagnose-incident`;\n  payload = body.payload || body;\n}\n\nreturn [{\n  json: {\n    target_endpoint: endpoint,\n    forward_payload: payload,\n    is_chat: endpoint.endsWith('/chat'),\n    is_edge_poll: endpoint.endsWith('/edge-vitals')\n  }\n}];"
       },
       "id": "avatar-route-request",
       "name": "Route Request Type",
@@ -82,7 +121,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8766/api/webhook/audit",
+        "url": "={{ ($vars && $vars.SBB_VAULT_BRIDGE_URL ? $vars.SBB_VAULT_BRIDGE_URL : 'http://127.0.0.1:8766') + '/api/webhook/audit' }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.audit_event) }}",

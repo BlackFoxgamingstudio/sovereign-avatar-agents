@@ -1,0 +1,25 @@
+# Template: Standalone Avatar Microservice & n8n Ecosystem for Solution 02
+version: '3.8'
+
+services:
+  sbb-avatar-agents:
+    image: ghcr.io/blackfoxgamingstudio/sovereign-avatar-agents:latest
+    container_name: sbb-avatar-agents
+    restart: unless-stopped
+    ports:
+      - "${SBB_AVATAR_PORT:-8785}:8785"
+    environment:
+      - SBB_AVATAR_PORT=8785
+      - SBB_DEFAULT_AI_PERSONA=${SBB_DEFAULT_AI_PERSONA:-SentinelSRE}
+      - SBB_RPI_TELEMETRY_URL=${SBB_RPI_TELEMETRY_URL:-http://sbb-rpi-telemetry:8770}
+      - SBB_VAULT_BRIDGE_URL=${SBB_VAULT_BRIDGE_URL:-http://sbb-vault-bridge:8766}
+
+  sbb-rpi-telemetry:
+    image: ghcr.io/blackfoxgamingstudio/sovereign-rpi-telemetry:latest
+    container_name: sbb-rpi-telemetry
+    restart: unless-stopped
+    ports:
+      - "8770:8770"
+    volumes:
+      - /sys:/sys:ro
+      - /proc:/proc:ro

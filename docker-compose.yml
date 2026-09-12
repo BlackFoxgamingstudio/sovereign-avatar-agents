@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  sbb-avatar-agents:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sbb-avatar-agents
+    restart: unless-stopped
+    ports:
+      - "8785:8785"
+    environment:
+      - SBB_AVATAR_PORT=8785
+      - SBB_ENVIRONMENT=production
+      - SBB_DEFAULT_AI_PERSONA=SentinelSRE
+      - SBB_RPI_TELEMETRY_URL=http://sbb-rpi-telemetry:8770
+      - SBB_VAULT_BRIDGE_URL=http://sbb-vault-bridge:8766
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8785/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
