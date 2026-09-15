@@ -1,17 +1,20 @@
-# Changelog
+# Changelog — Avatar Agents
 
-All notable changes to `sovereign-avatar-agents` will be documented in this file.
+All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
+Versioning follows [Semantic Versioning](https://semver.org/).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [Unreleased] — v1.1.0 (Domain Business Logic Engine)
+### In Progress
+- Extracting and packaging granular component algorithms defined in docs/ARCHITECTURE.md.
+- Connecting ChromaDB vector indexing and specialized domain pipelines.
 
-## [1.0.0] - 2026-09-12
-
+## [1.0.0] — 2026-09-11 (Production DevOps & Automation Foundation)
 ### Added
-- Autonomous multi-matrix AI Persona engine (`SentinelSRE`, `ChefPro`, `NovaPro`, `FacilitySentinel`).
-- Closed-loop IoT incident diagnosis module with automated Linux kernel and GPIO remediation directives.
-- Microservice webhook adapter on port 8785 with interactive Swagger UI (`/docs`) and OpenAPI 3.1 schema (`/openapi.json`).
-- Episodic conversational dialogue buffering with deterministic turn counters.
-- 10/10 automated tests passing under `pytest` and pure Python.
-- Multi-OS GitHub Actions CI/CD pipeline.
-- Turnkey Dockerfile and Docker Compose templates.
+- Multi-stage Dockerfile with non-root security context and health check.
+- GitHub Actions CI matrix testing across Python 3.10, 3.11, and 3.12.
+- Zero-Trust REST Webhook Adapter listening on port `8000` with `X-SBB-Auth` header validation.
+- OpenAPI 3.1 interactive Swagger documentation (`/docs` and `/openapi.json`).
+- Full n8n workflow canvas integration connecting Webhook ➔ HTTP Microservice ➔ Respond to Webhook.
+- Architecture specification (`docs/ARCHITECTURE.md`), Developer Guide, SME Playbook, and SOP.
+- Standardized CLI invocation harness in `src/cli.py`.
+- Foundation CoreEngine with deterministic SHA-256 idempotency hashing.
